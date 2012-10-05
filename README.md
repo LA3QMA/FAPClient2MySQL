@@ -10,5 +10,5 @@ You need:
 Ham-APRS-FAP - http://search.cpan.org/dist/Ham-APRS-FAP/
 
 Kai Gunter - LA3QMA
-Øyvind     - LA2ITA
 
+Øyvind     - LA2ITA
