@@ -90,6 +90,14 @@ for (;;){
 			if($packetdata{type} eq 'wx')
 			{
 			$IsWx = 1;
+	#APRSWx
+	# CallsignSSID,ReportTime,WindDir,WindSpeed,GustSpeed,Temperature,HourRain,DayRain,MidnightRain,Humidity,BarPressure
+	$sqlquery = "INSERT INTO APRSWx VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . "\')";
+#	print $sqlquery;
+#	print "\n";
+#        $query = $connect->prepare($sqlquery);
+#        $query->execute();
+
 			} else {
 			$IsWx = 0;
 			}
