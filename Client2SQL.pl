@@ -11,7 +11,7 @@ use DBD::mysql;
 # SQL config
 $database = "APRSC";
 $host = "localhost";
-$tablename = "APRSPackest";
+$tablename = "APRSPackets";
 $user = "APRS";
 $pw = "";
 $port = "3306";
@@ -95,13 +95,12 @@ for (;;){
 			}
 
 	# Commented out until we know how and what we want to store in SQL
-
+	# APRSPackets
 	$sqlquery = "INSERT INTO APRSPackets VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $Ptype . "\',\'" . $IsWx . "\',\'" . $packetdata{origpacket} . "\')";
-print $sqlquery;
-print "\n";
+	print $sqlquery;
+	print "\n";
 	$query = $connect->prepare($sqlquery);
 	$query->execute();
-	#printf('%d-%02d-%02d %02d:%02d:%02d', $Year+1900, $RealMonth, $DayOfMonth, $Hour, $Minute, $Second);
 
         } else {
                 warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
