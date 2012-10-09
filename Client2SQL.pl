@@ -111,6 +111,14 @@ for (;;){
         $query = $connect->prepare($sqlquery);
         $query->execute();
 
+	#APRSTrack
+	# CallsignSSID, ReportTime, Latitude, Longitude, Icon, Course, Speed, Altitude
+        $sqlquery = "INSERT INTO APRSTrack VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $packetdata{latitude} . "\',\'" . $packetdata{longitude} . "\',\'" . $packetdata{symboltable} . $packetdata{symbolcode} . "\',\'" . $packetdata{course} . "\',\'" . $packetdata{speed} . "\',\'" . $packetdata{altitude} . "\')";
+#       print $sqlquery;
+#       print "\n";
+        $query = $connect->prepare($sqlquery);
+        $query->execute();
+
         } else {
                 warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
         }
