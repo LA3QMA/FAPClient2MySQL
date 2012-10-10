@@ -104,7 +104,7 @@ for (;;){
 
 	# Commented out until we know how and what we want to store in SQL
 	# APRSPackets
-	$sqlquery = "INSERT INTO APRSPackets VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $Ptype . "\',\'" . $IsWx . "\',\'" . $packetdata{origpacket} . "\')";
+	$sqlquery = "INSERT INTO APRSPackets VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $Ptype . "\',\'" . $IsWx . "\',\'" . /\Q$packetdata{origpacket}\E/ . "\')";
 #	print $sqlquery;
 #	print "\n";
 	$query = $connect->prepare($sqlquery);
@@ -113,7 +113,7 @@ for (;;){
 	#APRSPosits
 	# CallsignSSID, ReportTime, Latitude, Longitude, Course, Speed, Altitude, Packet, Icon
 
-	$sqlquery = "REPLACE INTO APRSPosits VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $packetdata{latitude} . "\',\'" . $packetdata{longitude} . "\',\'" . $packetdata{course} . "\',\'" . $packetdata{speed} . "\',\'" . $packetdata{altitude} . "\',\'" . $packetdata{origpacket} . "\',\'" . $packetdata{symboltable} . $packetdata{symbolcode} . "\')";
+	$sqlquery = "REPLACE INTO APRSPosits VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $packetdata{latitude} . "\',\'" . $packetdata{longitude} . "\',\'" . $packetdata{course} . "\',\'" . $packetdata{speed} . "\',\'" . $packetdata{altitude} . "\',\'" . /\Q$packetdata{origpacket}\E/ . "\',\'" . $packetdata{symboltable} . $packetdata{symbolcode} . "\')";
 #	print $sqlquery;
 #	print "\n";
         $query = $connect->prepare($sqlquery);
