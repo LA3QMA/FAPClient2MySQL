@@ -22,7 +22,10 @@ $ISmycall = "N0CALL";
 $ISfilter = "t/poimqstunw";
 $ISclient = "Client2SQL 1.0";
 
-$connect = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",$user,$pw);
+my $connect = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",$user,$pw);
+my $query_aprstrack = $connect->prepare("REPLACE INTO APRSTrack VALUES (?,?,?,?,?,?,?,?)");
+my $query_aprsposits = $connect->prepare("REPLACE INTO APRSPosits VALUES (?,?,?,?,?,?,?,?,?)");
+my $query_aprspackets = $connect->prepare("INSERT INTO APRSPackets VALUES (?,?,?,?,?)");
 
 my $is = new Ham::APRS::IS($IShost, $ISmycall, 'filter' => $ISfilter, 'appid' => $ISclient);
 $is->connect('retryuntil' => 3) || die "Failed to connect: $is->{error}";
@@ -104,28 +107,25 @@ for (;;){
 
 	# Commented out until we know how and what we want to store in SQL
 	# APRSPackets
-	$sqlquery = "INSERT INTO APRSPackets VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $Ptype . "\',\'" . $IsWx . "\',\'" . /\Q$packetdata{origpacket}\E/ . "\')";
+	$sqlquery = "$packetdata{srccallsign} . $Time . $Ptype . $IsWx . $packetdata{origpacket}\n";
+	$query_aprspackets->execute($packetdata{srccallsign},$Time,$Ptype,$IsWx,$packetdata{origpacket});
 #	print $sqlquery;
 #	print "\n";
-	$query = $connect->prepare($sqlquery);
-	$query->execute();
 
 	#APRSPosits
 	# CallsignSSID, ReportTime, Latitude, Longitude, Course, Speed, Altitude, Packet, Icon
 
-	$sqlquery = "REPLACE INTO APRSPosits VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $packetdata{latitude} . "\',\'" . $packetdata{longitude} . "\',\'" . $packetdata{course} . "\',\'" . $packetdata{speed} . "\',\'" . $packetdata{altitude} . "\',\'" . /\Q$packetdata{origpacket}\E/ . "\',\'" . $packetdata{symboltable} . $packetdata{symbolcode} . "\')";
+	$sqlquery = "$packetdata{srccallsign} . $Time . $packetdata{latitude} . $packetdata{longitude} . $packetdata{course} . $packetdata{speed} . $packetdata{altitude} . /\Q$packetdata{origpacket}\E/ . $packetdata{symboltable}$packetdata{symbolcode}\n";
+	$query_aprsposits->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{course},$packetdata{speed},$packetdata{altitude},$packetdata{origpacket},$packetdata{symboltable}.$packetdata{symbolcode});
 #	print $sqlquery;
 #	print "\n";
-        $query = $connect->prepare($sqlquery);
-        $query->execute();
 
 	#APRSTrack
 	# CallsignSSID, ReportTime, Latitude, Longitude, Icon, Course, Speed, Altitude
-        $sqlquery = "INSERT INTO APRSTrack VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . $packetdata{latitude} . "\',\'" . $packetdata{longitude} . "\',\'" . $packetdata{symboltable} . $packetdata{symbolcode} . "\',\'" . $packetdata{course} . "\',\'" . $packetdata{speed} . "\',\'" . $packetdata{altitude} . "\')";
+        $sqlquery = "$packetdata{srccallsign} . $Time . $packetdata{latitude} . $packetdata{longitude} . $packetdata{symboltable}$packetdata{symbolcode} . $packetdata{course} . $packetdata{speed} . $packetdata{altitude}\n";
+	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
 #       print $sqlquery;
 #       print "\n";
-        $query = $connect->prepare($sqlquery);
-        $query->execute();
 
         } else {
                 warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
@@ -134,7 +134,3 @@ for (;;){
 }
 
 $is->disconnect() || die "Failed to disconnect: $is->{error}";
-
-
-
-
