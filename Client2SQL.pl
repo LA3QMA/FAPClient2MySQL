@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+use strict;
+use warnings;
 
 use Ham::APRS::IS;
 use Ham::APRS::FAP qw(parseaprs);
@@ -9,23 +11,26 @@ use DBI;
 use DBD::mysql;
 
 # SQL config
-$database = "database_name";
-$host = "localhost";
-$tablename = "APRSPackets";
-$user = "APRS";
-$pw = "somepassword";
-$port = "3306";
+my $database = "database_name";
+my $host = "localhost";
+#$tablename = "APRSPackets";
+my $user = "APRS";
+my $pw = "somepassword";
+my $port = "3306";
 
 # APRS-IS config
-$IShost = "rotate.aprs.net:10152";
-$ISmycall = "N0CALL";
-$ISfilter = "t/poimqstunw";
-$ISclient = "Client2SQL 1.0";
+my $IShost = "rotate.aprs.net:10152";
+my $ISmycall = "N0CALL";
+my $ISfilter = "t/poimqstunw";
+my $ISclient = "Client2SQL 1.0";
 
 my $connect = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",$user,$pw);
 my $query_aprstrack = $connect->prepare("REPLACE INTO APRSTrack VALUES (?,?,?,?,?,?,?,?)");
 my $query_aprsposits = $connect->prepare("REPLACE INTO APRSPosits VALUES (?,?,?,?,?,?,?,?,?)");
 my $query_aprspackets = $connect->prepare("INSERT INTO APRSPackets VALUES (?,?,?,?,?)");
+
+#Some local variables used
+my ($GMTTime,$Time,$Ptype,$IsWx);
 
 my $is = new Ham::APRS::IS($IShost, $ISmycall, 'filter' => $ISfilter, 'appid' => $ISclient);
 $is->connect('retryuntil' => 3) || die "Failed to connect: $is->{error}";
@@ -95,37 +100,22 @@ for (;;){
 			$IsWx = 1;
 	#APRSWx
 	# CallsignSSID,ReportTime,WindDir,WindSpeed,GustSpeed,Temperature,HourRain,DayRain,MidnightRain,Humidity,BarPressure
-	$sqlquery = "INSERT INTO APRSWx VALUES (\'" . $packetdata{srccallsign} . "\',\'" . $Time . "\',\'" . "\')";
-#	print $sqlquery;
-#	print "\n";
-#        $query = $connect->prepare($sqlquery);
-#        $query->execute();
-
+	# insert SQL here
 			} else {
 			$IsWx = 0;
 			}
 
-	# Commented out until we know how and what we want to store in SQL
 	# APRSPackets
-	$sqlquery = "$packetdata{srccallsign} . $Time . $Ptype . $IsWx . $packetdata{origpacket}\n";
+	# CallsignSSID,ReportTime,PacketType,IsWx,Packet
 	$query_aprspackets->execute($packetdata{srccallsign},$Time,$Ptype,$IsWx,$packetdata{origpacket});
-#	print $sqlquery;
-#	print "\n";
 
 	#APRSPosits
 	# CallsignSSID, ReportTime, Latitude, Longitude, Course, Speed, Altitude, Packet, Icon
-
-	$sqlquery = "$packetdata{srccallsign} . $Time . $packetdata{latitude} . $packetdata{longitude} . $packetdata{course} . $packetdata{speed} . $packetdata{altitude} . /\Q$packetdata{origpacket}\E/ . $packetdata{symboltable}$packetdata{symbolcode}\n";
 	$query_aprsposits->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{course},$packetdata{speed},$packetdata{altitude},$packetdata{origpacket},$packetdata{symboltable}.$packetdata{symbolcode});
-#	print $sqlquery;
-#	print "\n";
 
 	#APRSTrack
 	# CallsignSSID, ReportTime, Latitude, Longitude, Icon, Course, Speed, Altitude
-        $sqlquery = "$packetdata{srccallsign} . $Time . $packetdata{latitude} . $packetdata{longitude} . $packetdata{symboltable}$packetdata{symbolcode} . $packetdata{course} . $packetdata{speed} . $packetdata{altitude}\n";
 	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
-#       print $sqlquery;
-#       print "\n";
 
         } else {
                 warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
