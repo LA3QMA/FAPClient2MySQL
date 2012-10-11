@@ -9,18 +9,18 @@ use DBI;
 use DBD::mysql;
 
 # SQL config
-$database = "APRSC";
+$database = "database_name";
 $host = "localhost";
 $tablename = "APRSPackets";
 $user = "APRS";
-$pw = "";
+$pw = "somepassword";
 $port = "3306";
 
 # APRS-IS config
-$IShost = "servername:14580";
+$IShost = "rotate.aprs.net:10152";
 $ISmycall = "N0CALL";
 $ISfilter = "t/poimqstunw";
-$ISclient = "APRSC_MySQL_Client 1.0";
+$ISclient = "Client2SQL 1.0";
 
 $connect = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",$user,$pw);
 
@@ -129,6 +129,7 @@ for (;;){
 
         } else {
                 warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
+		# We should probably save this in a table.
         }
 }
 
