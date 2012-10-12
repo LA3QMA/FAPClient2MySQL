@@ -106,10 +106,10 @@ for (;;){
 
 	#APRSTrack
 	# CallsignSSID, ReportTime, Latitude, Longitude, Icon, Course, Speed, Altitude
-#	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
+	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
 
         } else {
-#		warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
+		warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
 		# We should probably save this in a table.
         }
 }
