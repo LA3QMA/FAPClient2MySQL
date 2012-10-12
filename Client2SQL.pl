@@ -13,7 +13,6 @@ use DBD::mysql;
 # SQL config
 my $database = "database_name";
 my $host = "localhost";
-#$tablename = "APRSPackets";
 my $user = "APRS";
 my $pw = "somepassword";
 my $port = "3306";
@@ -30,7 +29,7 @@ my $query_aprsposits = $connect->prepare("REPLACE INTO APRSPosits VALUES (?,?,?,
 my $query_aprspackets = $connect->prepare("INSERT INTO APRSPackets VALUES (?,?,?,?,?)");
 
 #Some local variables used
-my ($GMTTime,$Time,$Ptype,$IsWx);
+my ($GMTTime,$Time,$Ptype,$IsWx,$Symbol);
 
 my $is = new Ham::APRS::IS($IShost, $ISmycall, 'filter' => $ISfilter, 'appid' => $ISclient);
 $is->connect('retryuntil' => 3) || die "Failed to connect: $is->{error}";
@@ -43,19 +42,6 @@ for (;;){
         my $retval = parseaprs($l, \%packetdata);
 
         if ($retval == 1) {
-# Comment out 'print' as this is only here for debug information
-# Should probably add a 'verbose' function later
-#                        print "CALLSIGN: $packetdata{srccallsign}\n";
-#                        print "TYPE: $packetdata{type}\n";
-#                        print "PACKET: $packetdata{origpacket}\n";
-#                        print "LATITUDE: $packetdata{latitude}\n";
-#                        print "LONGITUDE: $packetdata{longitude}\n";
-#                        print "SYMBOLtable: $packetdata{symboltable}\n";
-#                        print "SYMBOL: $packetdata{symbolcode}\n";
-#                        print "SPEED: $packetdata{speed}\n";
-#                        print "COURSE: $packetdata{course}\n";
-#                        print "ALTITUDE: $packetdata{altitude}\n";
-#                        print "BODY: $packetdata{body}\n";
 
 # Prepare to insert into APRSPackets
 # PacketType:
@@ -69,26 +55,30 @@ for (;;){
 			print "$packetdata{srccallsign}\n";
                         $GMTTime = gmtime(time);
                         $Time = &UnixDate($GMTTime, '%Y-%m-%d %H:%M:%S');
-#			print "$Time\n";
+#			$Symbol = join($packetdata{symboltable},$packetdata{symbolcode});
 #PacketType
+#For now i'm not using the IFs but when there are no valid position we should probably not execute the SQL query
+#Or are the IFs more memory/cpu hungry?
+#Going to use IFs to store messages in seperate tables.
+
 			if($packetdata{type} eq 'message')
 			{
-#			print "Message/Bulletin: 1\n";
+			print "Message/Bulletin: 1\n";
 			$Ptype = 1;
 			}
 			if ($packetdata{type} eq 'object')
 			{
-#			print "Object/Item: 2 - Object\n";
+			print "Object/Item: 2 - Object\n";
 			$Ptype = 2;
 			}
 			if ($packetdata{type} eq 'item')
 			{
-#			print "Object/Item: 2 - Item\n";
+			print "Object/Item: 2 - Item\n";
 			$Ptype = 2;
 			}
 			if($packetdata{type} eq 'location')
 			{
-#			print "Position: 3\n";
+			print "Position: 3\n";
 			$Ptype = 3;
 			} elsif ($packetdata{type} eq '!')
 			{
@@ -111,14 +101,15 @@ for (;;){
 
 	#APRSPosits
 	# CallsignSSID, ReportTime, Latitude, Longitude, Course, Speed, Altitude, Packet, Icon
+
 	$query_aprsposits->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{course},$packetdata{speed},$packetdata{altitude},$packetdata{origpacket},$packetdata{symboltable}.$packetdata{symbolcode});
 
 	#APRSTrack
 	# CallsignSSID, ReportTime, Latitude, Longitude, Icon, Course, Speed, Altitude
-	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
+#	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
 
         } else {
-                warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
+#		warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
 		# We should probably save this in a table.
         }
 }
