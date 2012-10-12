@@ -27,6 +27,7 @@ my $connect = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",
 my $query_aprstrack = $connect->prepare("REPLACE INTO APRSTrack VALUES (?,?,?,?,?,?,?,?)");
 my $query_aprsposits = $connect->prepare("REPLACE INTO APRSPosits VALUES (?,?,?,?,?,?,?,?,?)");
 my $query_aprspackets = $connect->prepare("INSERT INTO APRSPackets VALUES (?,?,?,?,?)");
+my $query_aprswx = $connect->prepare("INSERT INTO APRSWx VALUES (?,?,?,?,?,?,?,?,?,?,?)");
 
 #Some local variables used
 my ($GMTTime,$Time,$Ptype,$IsWx,$Symbol);
@@ -57,7 +58,7 @@ for (;;){
                         $Time = &UnixDate($GMTTime, '%Y-%m-%d %H:%M:%S');
 #			$Symbol = join($packetdata{symboltable},$packetdata{symbolcode});
 #PacketType
-#For now i'm not using the IFs but when there are no valid position we should probably not execute the SQL query
+#For now i'm not using all the IFs but when there are no valid position we should probably not execute the SQL query
 #Or are the IFs more memory/cpu hungry?
 #Going to use IFs to store messages in seperate tables.
 
@@ -89,8 +90,8 @@ for (;;){
 			{
 			$IsWx = 1;
 	#APRSWx
-	# CallsignSSID,ReportTime,WindDir,WindSpeed,GustSpeed,Temperature,HourRain,DayRain,MidnightRain,Humidity,BarPressure
-	# insert SQL here
+			# CallsignSSID,ReportTime,WindDir,WindSpeed,GustSpeed,Temperature,HourRain,DayRain,MidnightRain,Humidity,BarPressure
+			$query_aprswx->execute($packetdata{srccallsign},$Time,$packetdata{'wx'}->{'wind_direction'},$packetdata{'wx'}->{'wind_speed'},$packetdata{'wx'}->{'wind_gust'},$packetdata{'wx'}->{'temp'},$packetdata{'wx'}->{'rain_1h'},$packetdata{'wx'}->{'rain_24'},$packetdata{'wx'}->{'rain_midnight'},$packetdata{'wx'}->{'humidity'},$packetdata{'wx'}->{'pressure'});
 			} else {
 			$IsWx = 0;
 			}
