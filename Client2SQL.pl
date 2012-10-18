@@ -1,3 +1,4 @@
+
 #!/usr/bin/perl
 use strict;
 use warnings;
@@ -31,6 +32,7 @@ my $query_aprswx = $connect->prepare("INSERT INTO APRSWx VALUES (?,?,?,?,?,?,?,?
 
 #Some local variables used
 my ($GMTTime,$Time,$Ptype,$IsWx,$Symbol);
+my ($storepos,$storepos2);
 
 my $is = new Ham::APRS::IS($IShost, $ISmycall, 'filter' => $ISfilter, 'appid' => $ISclient);
 $is->connect('retryuntil' => 3) || die "Failed to connect: $is->{error}";
@@ -59,34 +61,37 @@ for (;;){
 #			$Symbol = join($packetdata{symboltable},$packetdata{symbolcode});
 #PacketType
 #For now i'm not using all the IFs but when there are no valid position we should probably not execute the SQL query
-#Or are the IFs more memory/cpu hungry?
 #Going to use IFs to store messages in seperate tables.
 
-			if($packetdata{type} eq 'message')
+			if ($packetdata{type} eq 'message')
 			{
 			print "Message/Bulletin: 1\n";
 			$Ptype = 1;
+#			 $packetdata{'message'}
 			}
 			if ($packetdata{type} eq 'object')
 			{
 			print "Object/Item: 2 - Object\n";
+#			print "$packetdata{longitude}\n";
 			$Ptype = 2;
 			}
 			if ($packetdata{type} eq 'item')
 			{
 			print "Object/Item: 2 - Item\n";
+#			print "$packetdata{longitude}\n";
 			$Ptype = 2;
 			}
-			if($packetdata{type} eq 'location')
+			if ($packetdata{type} eq 'location')
 			{
 			print "Position: 3\n";
+#			print "$packetdata{longitude}\n";
 			$Ptype = 3;
 			} elsif ($packetdata{type} eq '!')
 			{
 #			print "Position: 3b\n";
 			$Ptype = 3;
 			}
-			if($packetdata{type} eq 'wx')
+			if ($packetdata{type} eq 'wx')
 			{
 			$IsWx = 1;
 	#APRSWx
@@ -100,14 +105,29 @@ for (;;){
 	# CallsignSSID,ReportTime,PacketType,IsWx,Packet
 	$query_aprspackets->execute($packetdata{srccallsign},$Time,$Ptype,$IsWx,$packetdata{origpacket});
 
+	#Check to see if we should insert the data
+    	# check for zero lat/long
+   	if (abs(defined $packetdata{latitude}) <= 0.001
+        	&& abs(defined $packetdata{longitude}) <= 0.001) {$storepos='0';print "error\n";} else {$storepos='1';};
+
+        # check for out-of-range latitude (bad GPS, although technically valid)
+       if (abs(defined $packetdata{latitude}) > 88) {$storepos2='0';print "error2\n";} else {$storepos2='1';};
+
+
+if ($storepos eq '1' && $storepos2 eq '1')
+	{
 	#APRSPosits
 	# CallsignSSID, ReportTime, Latitude, Longitude, Course, Speed, Altitude, Packet, Icon
-
 	$query_aprsposits->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{course},$packetdata{speed},$packetdata{altitude},$packetdata{origpacket},$packetdata{symboltable}.$packetdata{symbolcode});
-
+#	print "$storepos $storepos2 $Ptype $packetdata{longitude}\n";
 	#APRSTrack
 	# CallsignSSID, ReportTime, Latitude, Longitude, Icon, Course, Speed, Altitude
 	$query_aprstrack->execute($packetdata{srccallsign},$Time,$packetdata{latitude},$packetdata{longitude},$packetdata{symboltable}.$packetdata{symbolcode},$packetdata{course},$packetdata{speed},$packetdata{altitude});
+        }
+        else
+        {
+        print "ERROR: Do not store to SQL\n";
+        }
 
         } else {
 		warn "Parsing failed: $packetdata{resultmsg} ($packetdata{resultcode})\n";
