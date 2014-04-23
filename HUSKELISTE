@@ -1,0 +1,6 @@
+Legge til bibliotek som kreves av FAP:
+
+cpan
+install Date::Calc
+install Date::Manip
+
