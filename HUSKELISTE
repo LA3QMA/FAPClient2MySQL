@@ -4,3 +4,4 @@ cpan
 install Date::Calc
 install Date::Manip
 
+Started to implement storage of APRS messages and telemetry
