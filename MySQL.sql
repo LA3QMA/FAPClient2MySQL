@@ -54,6 +54,15 @@ Humidity tinyint null,
 BarPressure decimal(5, 1)null
 );
 
+CREATE TABLE APRSMsg
+(
+CallsignSSID varchar(9) not null,
+CallsignTo varchar(9) not null,
+ReportTime datetime not null,
+Message blob,
+Packet blob
+);
+
 CREATE INDEX IX_APRSPackets_RT ON APRSPackets(ReportTime);
 
 CREATE INDEX IX_APRSTrack_RT ON APRSTrack(ReportTime);
