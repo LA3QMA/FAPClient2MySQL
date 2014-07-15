@@ -22,13 +22,14 @@ my $port = "3306";
 my $IShost = "rotate.aprs.net:10152";
 my $ISmycall = "N0CALL";
 my $ISfilter = "t/poimqstunw";
-my $ISclient = "Client2SQL 1.0";
+my $ISclient = "Client2SQL 1.1";
 
 my $connect = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",$user,$pw);
 my $query_aprstrack = $connect->prepare("REPLACE INTO APRSTrack VALUES (?,?,?,?,?,?,?,?)");
 my $query_aprsposits = $connect->prepare("REPLACE INTO APRSPosits VALUES (?,?,?,?,?,?,?,?,?)");
 my $query_aprspackets = $connect->prepare("INSERT INTO APRSPackets VALUES (?,?,?,?,?)");
 my $query_aprswx = $connect->prepare("INSERT INTO APRSWx VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+my $query_message = $connect->prepare("INSERT INTO APRSMsg VALUES (?,?,?,?,?)");
 
 #Some local variables used
 my ($GMTTime,$Time,$Ptype,$IsWx,$Symbol);
@@ -67,6 +68,16 @@ for (;;){
 			{
 			print "Message/Bulletin: 1\n";
 			$Ptype = 1;
+#			print "From: ";
+#			print "$packetdata{srccallsign}\n";
+#			print "To: ";
+#			print "$packetdata{destination}\n";
+#			print "Message: ";
+#			print $packetdata{'message'};
+#			print "Ack: ";
+#			print "$packetdata{messageack}\n";
+			$query_message->execute($packetdata{srccallsign},$packetdata{destination},$Time,$packetdata{message},$packetdata{origpacket});
+
 #			 $packetdata{'message'}
 			}
 			if ($packetdata{type} eq 'object')
